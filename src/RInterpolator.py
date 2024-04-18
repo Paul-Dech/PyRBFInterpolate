@@ -5,9 +5,53 @@
 
 import numpy as np
 from scipy.spatial import KDTree
+import importlib
+
+_AVAILABLE_KERNELS = {
+    'linear',
+    'thin_plate_spline',
+    'cubic',
+    'gaussian',
+    'multiquadric',
+    'inverse_multiquadric',
+    'quintic'
+}
 
 class RBFInterpolator:
-    def __init__(self, y, x, _neighbors = None) -> None:
+    """Radial basis function (RBF) interpolation in N dimensions
+    
+    Parameters
+    ----------
+    y : array_like
+        Data points, shape (n, d)
+    x : array_like
+        Interpolation points, shape (m, d)
+    _neighbors : int, optional
+        Number of neighbors to consider for each interpolation point, by default None
+    _kernel : str, optional
+        Kernel function to use, by default 'linear'
+        Kernel can be one of the following:
+        - 'linear' : f(r) = -r
+        - 'thin_plate_spline' : f(r) = r^2 * log(r)
+        - 'cubic' : f(r) = r^3
+        - 'gaussian' : f(r) = exp(-r^2)
+        - 'multiquadric' : f(r) = sqrt(1 + r^2)
+        - 'inverse_multiquadric' : f(r) = 1 / sqrt(1 + r^2)
+        - 'quintic' : f(r) = r^5
+    
+    Raises
+    ------
+    ValueError
+        If an unknown kernel is provided
+    """
+    def __init__(self, y, x, _neighbors = None, _kernel='linear') -> None:
+
+        if _kernel not in _AVAILABLE_KERNELS:
+            raise ValueError(f"Unknown kernel: {_kernel}")
+        
+        RKernels = importlib.import_module("src.RKernels")
+        self.__rbfKernel = getattr(RKernels, _kernel)
+
         self.x = x
         self.y = y
         if _neighbors is None:
@@ -58,6 +102,18 @@ class RBFInterpolator:
                         self.Axtest[xidx[i], yidx[j]] = self.__rbfKernel(np.linalg.norm(xnbr[i] - ynbr[j]))
 
     def interpolate(self, val):
+        """Interpolate the given values at the interpolation points
+
+        Parameters
+        ----------
+        val : array_like
+            Values to interpolate, shape (n, d)
+
+        Returns
+        -------
+        array_like
+            Interpolated values, shape (m, d)
+        """
         if self.neighbors is None:
             wk = np.linalg.solve(self.Ay, val)
             return self.Ax @ wk
@@ -82,6 +138,3 @@ class RBFInterpolator:
                         vec[i, j] = self.Axtest[xidx[i], yidx[j]]
                 out[xidx] = np.dot(vec, coeffs)
             return out
-
-    def __rbfKernel(self, r):
-        return -r
