@@ -11,7 +11,7 @@ import time
 
 n = 100     # Number of data points
 p = 50      # Number of interpolation points
-k = None    # Number of neighbors
+k = 10      # Number of neighbors
 
 print('\033[94m' + 'pyStarting' + '\033[0m')
 
@@ -25,9 +25,11 @@ xp[:,0] = np.linspace(0, 1, p)
 # Interpolation object
 start_pyRBF = time.time()
 rbf = RBFInterpolator(x, xp, _neighbors = k)
-print('\033[94m' + 'pyInterpolating' + '\033[0m')
-yp = rbf.interpolate(y)
 end_pyRBF = time.time()
+print('\033[94m' + 'pyInterpolating' + '\033[0m')
+start_pyRBFinterp = time.time()
+yp = rbf.interpolate(y)
+end_pyRBFinterp = time.time()
 
 # SciPy
 start_sp = time.time()
@@ -37,7 +39,8 @@ end_sp = time.time()
 
 print('\033[94m' + 'pyTesting' + '\033[0m')
 print('Maximum difference', np.linalg.norm((yp.reshape(-1) - ysp), np.inf))
-print('pyRBFInterpolator took {:.6f} seconds'.format(end_pyRBF - start_pyRBF))
+print('pyRBFInterpolator init took {:.6f} seconds'.format(end_pyRBF - start_pyRBF))
+print('pyRBFInterpolator interpolate took {:.6f} seconds'.format(end_pyRBFinterp - start_pyRBFinterp))
 print("SciPy interpolation took {:.6f} seconds".format(end_sp - start_sp))
 
 plt.plot(x[:,0], y[:,0], color='red', lw=2, label='Reference')
