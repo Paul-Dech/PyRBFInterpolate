@@ -18,7 +18,7 @@ _AVAILABLE_KERNELS = {
 }
 
 class RBFInterpolator:
-    """Radial basis function (RBF) interpolation in N dimensions
+    """Radial basis function (RBF) interpolation
     
     Parameters
     ----------
@@ -38,6 +38,12 @@ class RBFInterpolator:
         - 'multiquadric' : f(r) = sqrt(1 + r^2)
         - 'inverse_multiquadric' : f(r) = 1 / sqrt(1 + r^2)
         - 'quintic' : f(r) = r^5
+    
+    Infos
+    -----
+    n : int Number of data points
+    m : int Number of interpolation points
+    d : int Number of dimensions
     
     Raises
     ------
@@ -114,17 +120,19 @@ class RBFInterpolator:
         array_like
             Interpolated values, shape (m, d)
         """
+        if val.ndim == 1:
+            val = val[:, None]
         if self.neighbors is None:
             wk = np.linalg.solve(self.Ay, val)
             return self.Ax @ wk
         else:
             out = np.empty((self.x.shape[0], val.shape[1]), dtype=float)
             for xidx, yidx in zip(self.xindices, self.yindices):
-                p = self.y[yidx].shape[0]
-                q = self.x[xidx].shape[0]
+                n = self.y[yidx].shape[0]
+                m = self.x[xidx].shape[0]
 
-                lhs = np.empty((p, p), dtype=float)
-                for i in range(p):
+                lhs = np.empty((n, n), dtype=float)
+                for i in range(n):
                     for j in range(i+1):
                         lhs[i, j] = self.Aytest[yidx[i], yidx[j]]
                         lhs[j, i] = lhs[i, j]
@@ -132,9 +140,9 @@ class RBFInterpolator:
                 rhs = val[yidx]
                 coeffs = np.linalg.solve(lhs, rhs)
 
-                vec = np.empty((q, p), dtype=float)
-                for i in range(q):
-                    for j in range(p):
+                vec = np.empty((m, n), dtype=float)
+                for i in range(m):
+                    for j in range(n):
                         vec[i, j] = self.Axtest[xidx[i], yidx[j]]
                 out[xidx] = np.dot(vec, coeffs)
             return out

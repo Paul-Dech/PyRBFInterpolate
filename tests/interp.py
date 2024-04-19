@@ -43,23 +43,23 @@ end_pyRBFinterp = time.time()
 # SciPy
 start_sp = time.time()
 print('\033[94m' + 'pySciPyInterpolate' + '\033[0m')
-ysp = sprbf(x, y[:,0], kernel=kern, neighbors=k)(xp)
+ysp = sprbf(x, y, kernel=kern, neighbors=k)(xp)
 end_sp = time.time()
 
 print('\033[94m' + 'pyTesting' + '\033[0m')
 print('')
-print(f'Maximum difference (log): {0:f}'.format(np.linalg.norm((yp.reshape(-1) - ysp), np.inf)))
+print(f'Maximum difference (log): {np.log10(np.linalg.norm((yp - ysp), np.inf)):.2f}')
 print('-------- Timers --------')
 print('{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n'.format('Init:', end_pyRBF - start_pyRBF,\
                                                                      'Interpolate:', end_pyRBFinterp - start_pyRBFinterp,\
                                                                      'SciPy:', end_sp - start_sp))
 
-plt.plot(x[:,0], y[:,0], color='red', lw=2, label='Reference')
+plt.plot(x[:,0], y, '-', color='red', lw=2, label='Reference')
 plt.plot(xp[:,0], yp, 's', fillstyle='none', markeredgewidth=1.5, color= 'blue', lw=1, label='Interpolated')
 plt.plot(xp[:,0], ysp, 'x', color= 'black', markeredgewidth=2, lw=2, label='SciPy')
 plt.xlabel('$x$')
 plt.ylabel('$y$')
 plt.legend(frameon=False)
-plt.gca().spines['top'].set_visible(False)
-plt.gca().spines['right'].set_visible(False)
+for side in ['top', 'right']:
+    plt.gca().spines[side].set_visible(False)
 plt.show()
