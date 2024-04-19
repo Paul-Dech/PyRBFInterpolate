@@ -1,0 +1,59 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Misc
+core
+*.pyc
+*.*~
+
+# OS
+.DS_Store
+*.swp
+*.bak
+
+# Workspace
+workspace
+workspace.tar.gz
+*.tar.gz
+*.tgz
+
+# build dir
+build
+
+# gitlab-ci / clang-format
+patches
+
+# Gmsh
+*.db
+*.pos
+*.msh # do not commit the mesh...
+!*_lfs.msh # ... except in the lfs
+
+# sge output
+*.o*
+*.po*
+
+# matlab
+*.asv
+
+# paraview
+*.ogv
+*.pvsm
+
+# IDE
+.project
+.pydevproject
+.settings
+.vscode
+.vscode/*
