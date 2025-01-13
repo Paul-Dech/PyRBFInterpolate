@@ -15,6 +15,9 @@ def linear(r):
     """
     return -r
 
+def linear_grad(r):
+    return -1
+
 def thin_plate_spline(r):
     """Thin plate spline kernel function f(r) = r^2 * log(r)
 
@@ -44,6 +47,9 @@ def cubic(r):
         Kernel value
     """
     return r**3
+
+def cubic_grad(r):
+    return 3 * r**2
 
 def gaussian(r):
     """Gaussian kernel function f(r) = exp(-r^2)

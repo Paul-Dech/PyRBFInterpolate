@@ -15,8 +15,8 @@ from scipy.interpolate import RBFInterpolator as sprbf
 
 ##### Test parameters #####
 
-n = 4         # Number of data points
-p = 2          # Number of interpolation points
+n = 100         # Number of data points
+p = 100          # Number of interpolation points
 k = None          # Number of neighbors
 kern = 'linear' # RBF kernel
 
@@ -24,12 +24,17 @@ kern = 'linear' # RBF kernel
 
 print('\033[94m' + 'pyStarting' + '\033[0m')
 
-x = np.zeros((n, 1))
+x = np.zeros((n, 2))
+# Do a grid of points between 0 and 1 using repmat
 x[:,0] = np.linspace(0, 1, n)
-y = np.sin(2*np.pi*x)
+for i in range(n//10):
+    x[i*n//10:(i+1)*n//10,1] = np.linspace(0, 1, n//10)
+y = np.sin(2*np.pi*x[:,0]) * np.sin(2*np.pi*x[:,1])
 
-xp = np.zeros((p, 1))
-xp[:,0] = np.linspace(0.1, 0.9, p)
+xp = np.zeros((p, 2))
+xp[:,0] = np.linspace(0, 1, p)
+for i in range(p//10):
+    xp[i*p//10:(i+1)*p//10,1] = np.linspace(0, 1, p//10)
 
 # Interpolation object
 start_pyRBF = time.time()
@@ -38,26 +43,6 @@ end_pyRBF = time.time()
 print('\033[94m' + 'pyInterpolating' + '\033[0m')
 start_pyRBFinterp = time.time()
 yp = rbf.interpolate(y)
-yp_grad = rbf.evalGrad(y)
-
-print('Finite difference')
-dyp_dx_fd = np.zeros((p, n))
-eps = 1e-6
-for j in range(x.shape[0]):
-    x_sav = x[j,0]
-    x[j,0] = x[j,0] + eps
-    y_p_plus = RBFInterpolator(x, xp, _neighbors = k, _kernel=kern).interpolate(y)
-    x[j,0] = x_sav - eps
-    y_p_minus = RBFInterpolator(x, xp, _neighbors = k, _kernel=kern).interpolate(y)
-    dyp_dx_fd[:,j] = ((y_p_plus - y_p_minus) / 2/eps)[:,0]
-    x[j,0] = x_sav
-
-print('Gradient analytical\n', yp_grad)
-print('Gradient finite difference\n', dyp_dx_fd)
-print('Difference\n', yp_grad - dyp_dx_fd)
-quit()
-
-
 end_pyRBFinterp = time.time()
 
 # SciPy
@@ -74,12 +59,10 @@ print('{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n'.format('Init:', e
                                                                      'Interpolate:', end_pyRBFinterp - start_pyRBFinterp,\
                                                                      'SciPy:', end_sp - start_sp))
 
-plt.plot(x[:,0], y, '-', color='red', lw=2, label='Reference')
-plt.plot(xp[:,0], yp, 's', fillstyle='none', markeredgewidth=1.5, color= 'blue', lw=1, label='Interpolated')
-plt.plot(xp[:,0], ysp, 'x', color= 'black', markeredgewidth=2, lw=2, label='SciPy')
-plt.xlabel('$x$')
-plt.ylabel('$y$')
-plt.legend(frameon=False)
-for side in ['top', 'right']:
-    plt.gca().spines[side].set_visible(False)
+# Plot 3D with color
+from matplotlib import cm
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_trisurf(x[:,0], x[:,1], y, color='blue', linewidth=0.1)
+ax.scatter(xp[:,0], xp[:,1], yp, label='Interpolated', color='red')
 plt.show()
