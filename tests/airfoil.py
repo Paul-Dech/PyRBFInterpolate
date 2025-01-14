@@ -14,7 +14,7 @@ from src.RInterpolator import RBFInterpolator
 from scipy.interpolate import RBFInterpolator as sprbf
 
 ##### Test parameters #####
-k = None        # Number of neighbors
+k = 20        # Number of neighbors
 kern = 'linear' # RBF kernel
 
 ##### Test start #####

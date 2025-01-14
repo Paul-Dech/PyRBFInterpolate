@@ -15,10 +15,10 @@ from scipy.interpolate import RBFInterpolator as sprbf
 
 ##### Test parameters #####
 
-n = 4         # Number of data points
-p = 2          # Number of interpolation points
-k = None          # Number of neighbors
-kern = 'linear' # RBF kernel
+n = 100           # Number of data points
+p = 30            # Number of interpolation points
+k = 10            # Number of neighbors
+kern = 'linear'   # RBF kernel
 
 ##### Test start #####
 
@@ -38,11 +38,17 @@ end_pyRBF = time.time()
 print('\033[94m' + 'pyInterpolating' + '\033[0m')
 start_pyRBFinterp = time.time()
 yp = rbf.interpolate(y)
-yp_grad = rbf.evalGrad(y)
+end_pyRBFinterp = time.time()
+start_pyRBFgrad = time.time()
+print('\033[94m' + 'pyGradients' + '\033[0m')
+yp_grad = rbf.eval_grad_mesh()
+end_pyRBFgrad = time.time()
 
-print('Finite difference')
+
+print('\033[94m' + 'pyFiniteDifference' + '\033[0m')
+start_grad_fd = time.time()
 dyp_dx_fd = np.zeros((p, n))
-eps = 1e-6
+eps = 1e-8
 for j in range(x.shape[0]):
     x_sav = x[j,0]
     x[j,0] = x[j,0] + eps
@@ -51,14 +57,7 @@ for j in range(x.shape[0]):
     y_p_minus = RBFInterpolator(x, xp, _neighbors = k, _kernel=kern).interpolate(y)
     dyp_dx_fd[:,j] = ((y_p_plus - y_p_minus) / 2/eps)[:,0]
     x[j,0] = x_sav
-
-print('Gradient analytical\n', yp_grad)
-print('Gradient finite difference\n', dyp_dx_fd)
-print('Difference\n', yp_grad - dyp_dx_fd)
-quit()
-
-
-end_pyRBFinterp = time.time()
+end_grad_fd = time.time()
 
 # SciPy
 start_sp = time.time()
@@ -68,11 +67,14 @@ end_sp = time.time()
 
 print('\033[94m' + 'pyTesting' + '\033[0m')
 print('')
-print(f'Maximum difference (log): {np.log10(np.linalg.norm((yp - ysp), np.inf)):.2f}')
+print(f'Maximum difference gradient (log): {np.log10(np.linalg.norm((yp_grad - dyp_dx_fd), np.inf)):.2f}')
+print(f'Maximum difference SciPy (log): {np.log10(np.linalg.norm((yp - ysp), np.inf)):.2f}')
 print('-------- Timers --------')
-print('{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n'.format('Init:', end_pyRBF - start_pyRBF,\
+print('{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n'.format('Init:', end_pyRBF - start_pyRBF,\
                                                                      'Interpolate:', end_pyRBFinterp - start_pyRBFinterp,\
-                                                                     'SciPy:', end_sp - start_sp))
+                                                                     'SciPy:', end_sp - start_sp,
+                                                                     'Gradient:', end_pyRBFgrad - start_pyRBFgrad,
+                                                                     'FD:', end_grad_fd - start_grad_fd))
 
 plt.plot(x[:,0], y, '-', color='red', lw=2, label='Reference')
 plt.plot(xp[:,0], yp, 's', fillstyle='none', markeredgewidth=1.5, color= 'blue', lw=1, label='Interpolated')
