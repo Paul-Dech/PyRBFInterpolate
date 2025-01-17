@@ -1,4 +1,4 @@
-# Test the RBFInterpolator class against the SciPy implementation
+# Test the RBFInterpolator class against the SciPy implementation in 2D
 
 # @authors: Paul Dechamps, Adrien Crovato
 # @date: 2024
@@ -15,41 +15,44 @@ from scipy.interpolate import RBFInterpolator as sprbf
 
 ##### Test parameters #####
 
-n = 100          # Number of data points
-p = 20          # Number of interpolation points
-k = 10            # Number of neighbors
+n = 10           # Number of data points
+p = 9            # Number of interpolation points
+k = None         # Number of neighbors
 kern = 'linear'  # RBF kernel
-smooth = 1e-5      # Smoothing parameter
+smooth = 0.      # Smoothing parameter
 deg = 2
+
 ##### Test start #####
+# Define the grid
+x0 = np.linspace(-1, 1, n)
+x1 = np.linspace(-1, 1, n)
+x0, x1 = np.meshgrid(x0, x1)
+x = np.vstack([x0.ravel(), x1.ravel()]).T
+y = -(x[:, 0]**2 + (x[:, 1])**2)
+#y = y.reshape(x0.shape)
 
-print('\033[94m' + 'pyStarting' + '\033[0m')
-
-x = np.zeros((n, 1))
-x[:,0] = np.linspace(-1.5, 1.5, n)
-y = np.sin(2*np.pi*x)
-
-xp = np.zeros((p, 1))
-xp[:,0] = np.linspace(-0.75, 1.25, p)
+xp = np.zeros((p, 2))
+xp[:,0] = np.linspace(-0.5, 0.9, p)
+xp[:,1] = np.linspace(-1, 0.5, p)
 
 # Interpolation object
+print('\033[94m' + 'pyInit' + '\033[0m')
 start_pyRBF = time.time()
 rbf = RBFInterpolator(x, xp, _neighbors = k, _kernel=kern, smoothing=smooth, degree=deg)
 end_pyRBF = time.time()
 print('\033[94m' + 'pyInterpolating' + '\033[0m')
 start_pyRBFinterp = time.time()
-yp = rbf.interpolate(y)
+yp = rbf.interpolate(y)[:,0]
 end_pyRBFinterp = time.time()
 start_pyRBFgrad = time.time()
 print('\033[94m' + 'pyGradients' + '\033[0m')
 yp_grad = rbf.eval_grad_mesh()
 end_pyRBFgrad = time.time()
 
-
 print('\033[94m' + 'pyFiniteDifference' + '\033[0m')
 start_grad_fd = time.time()
-dyp_dx_fd = np.zeros((p, n*x.shape[1]))
-eps = 1e-6
+dyp_dx_fd = np.zeros((xp.shape[0], x.shape[0]*x.shape[1]))
+eps = 1e-5
 for j in range(x.shape[0]):
     for idim in range(x.shape[1]):
         x_sav = x[j,idim]
@@ -69,7 +72,7 @@ end_sp = time.time()
 
 print('\033[94m' + 'pyTesting' + '\033[0m')
 print('')
-print(f'Maximum difference gradient (log): {np.log10(np.linalg.norm(yp_grad - dyp_dx_fd, np.inf)/np.linalg.norm(yp_grad)):.2f}')
+print(f'Maximum difference gradient (log): {np.log10(np.linalg.norm(abs((yp_grad - dyp_dx_fd)), np.inf)/np.linalg.norm(yp_grad)):.2f}')
 print(f'Maximum difference SciPy (log): {np.log10(np.linalg.norm((yp - ysp), np.inf)):.2f}')
 print('-------- Timers --------')
 print('{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n'.format('Init:', end_pyRBF - start_pyRBF,\
@@ -78,12 +81,10 @@ print('{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n{:<15s}{:<15.6f}\n{
                                                                      'Gradient:', end_pyRBFgrad - start_pyRBFgrad,
                                                                      'FD:', end_grad_fd - start_grad_fd))
 
-plt.plot(x[:,0], y, '-', color='red', lw=2, label='Reference')
-plt.plot(xp[:,0], yp, 's', fillstyle='none', markeredgewidth=1.5, color= 'blue', lw=1, label='Interpolated')
-plt.plot(xp[:,0], ysp, 'x', color= 'black', markeredgewidth=2, lw=2, label='SciPy')
-plt.xlabel('$x$')
-plt.ylabel('$y$')
-plt.legend(frameon=False)
-for side in ['top', 'right']:
-    plt.gca().spines[side].set_visible(False)
+# plot 3D surface
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+plt.plot(xp[:,0], xp[:,1], yp, 'r', lw=5, markersize=10)
+ax.plot_surface(x0, x1, y.reshape(x0.shape), edgecolor='black', alpha=0.5)
+plt.title('Data points')
 plt.show()

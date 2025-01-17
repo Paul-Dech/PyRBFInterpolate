@@ -16,6 +16,8 @@ from scipy.interpolate import RBFInterpolator as sprbf
 ##### Test parameters #####
 k = 10        # Number of neighbors
 kern = 'linear' # RBF kernel
+deg = 0
+smooth = 1e-8
 
 ##### Test start #####
 
@@ -39,7 +41,7 @@ for idim in range(3):
 
 # Interpolation object
 start_pyRBF = time.time()
-rbf = RBFInterpolator(x0, xinterp, _neighbors = k, _kernel=kern)
+rbf = RBFInterpolator(x0, xinterp, _neighbors = k, _kernel=kern, degree=deg, smoothing=smooth)
 end_pyRBF = time.time()
 print('\033[94m' + 'pyInterpolating' + '\033[0m')
 start_pyRBFinterp = time.time()
@@ -53,11 +55,11 @@ end_pyRBFinterp = time.time()
 # SciPy
 start_sp = time.time()
 print('\033[94m' + 'pySciPyInterpolate' + '\033[0m')
-rhointerp_sp = sprbf(x0, rho0, kernel=kern, neighbors=k)(xinterp).ravel()
-Minterp_sp = sprbf(x0, M0, kernel=kern, neighbors=k)(xinterp).ravel()
+rhointerp_sp = sprbf(x0, rho0, kernel=kern, neighbors=k, degree=deg, smoothing=smooth)(xinterp).ravel()
+Minterp_sp = sprbf(x0, M0, kernel=kern, neighbors=k, degree=deg, smoothing=smooth)(xinterp).ravel()
 vinterp_sp = np.zeros((len(Minterp_sp), 3))
 for idim in range(3):
-    vinterp_sp[:,idim] = sprbf(x0, v0[:,idim], kernel=kern, neighbors=k)(xinterp).ravel()
+    vinterp_sp[:,idim] = sprbf(x0, v0[:,idim], kernel=kern, neighbors=k, degree=deg, smoothing=smooth)(xinterp).ravel()
 end_sp = time.time()
 
 print('\033[94m' + 'pyTesting' + '\033[0m')

@@ -41,6 +41,58 @@ class linear_kernel:
         grad = (x0 - x1) / dist
         return (-grad, grad)
 
+class thin_plate_spline_kernel:
+    """Thin plate spline kernel function f(r) = r^2 * log(r)
+    """
+    def __init__(self):
+        pass
+    def eval(self, x0, x1=None):
+        """Evaluate the value of the kernel
+
+        Parameters
+        ----------
+        x0 : array_like or float
+            First point or distance between two points
+        x1 : array_like or float, optional
+            Second point (if x0 is the first point)
+
+        Returns
+        -------
+        float
+            Kernel value
+        """
+        if x1 is None:
+            r = x0
+        else:
+            r = np.linalg.norm(x0 - x1)
+        return r**2 * np.log(r) if r > 0 else 0
+    def eval_grad(self, x0, x1, _axis=1):
+        raise NotImplementedError("Gradient not implemented for this kernel")
+
+class cubic_kernel:
+    """Cubic kernel function f(r) = r^3
+    """
+    def __init__(self):
+        pass
+    def eval(self, x0, x1=None):
+        """Evaluate the value of the kernel
+
+        x1 : array_like or float
+            First point or distance between two points
+        x1 : array_like or float, optional
+            Second point (if x0 is the first point)
+
+        Returns
+        -------
+        float
+            Kernel value
+        """
+        if x1 is None:
+            r = x0
+        else:
+            r = np.linalg.norm(x0 - x1)
+        return r**3
+
 def thin_plate_spline(r):
     """Thin plate spline kernel function f(r) = r^2 * log(r)
 
